@@ -1,12 +1,13 @@
 ---
 title: "Lag in DC Test Results"
-author: "Slushmier"
-date: "4/9/2020"
-output: html_document
+output:
+  html_document: 
+    keep_md: no
+  rmarkdown::github_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 
 library(readxl)
 library(dplyr)
@@ -47,10 +48,12 @@ testing_test <- testing_test %>%
          Test_Lag_7 = lag(Test_New, n = 7, default = 0))
 ```
 
-## New Postive Results in DC Lag by About Four Days
+## Postive Covid-19 Results in DC Lag by About Four Days
 
-The below plot show the number of Positive Tests in red and the number of New
-Tests times the positive test rate in blue.
+The below plot shows the number of Positive Tests in red and the number of New
+Tests (multiplied by the positive test rate) in blue. Although the numbers 
+tracked pretty well early on in testing, they have diverged recently. The 
+correlation coefficient is currently `r cor(testing_test[6:ncol(testing_test)])[2, 1]`.
 
 ```{r same_day}
 plot1 <- testing_test %>% 
@@ -68,10 +71,10 @@ ggplot(data = plot1, aes(x = Date)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-## Lagged test results
-
-The below plot shows the number of Positive Tests in red and the number of New
-Tests four days ago times the positive test rate in blue.
+The below plot shows the number of Positive Tests in red compared to
+the number of New Tests four days ago (times the cumulative positive test rate) 
+in blue. These numbers track much better, with a current correlation coefficient
+of `r cor(testing_test[6:ncol(testing_test)])[2, 6]`.
 
 ```{r lag_4}
 plot2 <- testing_test %>% 
@@ -90,11 +93,13 @@ ggplot(data = plot2, aes(x = Date)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-Here are the correlation matricies for those interested in such a thing.
+Here is the correlation matrix for those interested in such a thing.
 
 ```{r}
 cor(testing_test[6:ncol(testing_test)])
 ```
 
-Note: the test counts for 20 March were missing so I averaged the 19 March and 
-21 March test rate.
+A couple notes. First, the test counts for 20 March were missing so I averaged 
+the 19 March and 21 March test rate. In addition, for the initial lagged 
+variables, I made the defaults zero. This could make the correlation metrics
+stronger for the lagged variables, but the effect doesn't look uniform.
