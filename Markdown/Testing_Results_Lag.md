@@ -1,7 +1,5 @@
 Lag in DC Test Results
 ================
-Slushmier
-4/9/2020
 
 ## New Postive Results in DC Lag by About Four Days
 
