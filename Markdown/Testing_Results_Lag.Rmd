@@ -1,0 +1,100 @@
+---
+title: "Lag in DC Test Results"
+author: "Slushmier"
+date: "4/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+setwd("..")
+
+overall_dc <- read_excel("Data/DC_Daily/DC-COVID-19-Data-for-April-7-2020.xlsx",
+                          sheet = "Overal Stats")
+colnames(overall_dc)[1:2] <- c("Category", "Subcategory")
+overall_dc <- overall_dc %>% dplyr::filter(!is.na(Category))
+
+### Testing data missing from 20 March, so averaging 19 March and 21 March data
+testing <- overall_dc %>% dplyr::filter(Category == "Testing")
+for(i in 3:ncol(testing)) testing[i] <- testing[[i]] %>% replace_na(0)
+for(i in 3:ncol(testing)) testing[i] <- as.numeric(testing[[i]])
+
+testing_test <- testing %>% dplyr::select(-Category) %>% 
+  pivot_longer(-Subcategory, names_to = "Date", values_to = "Count")
+
+testing_test$Date <- as.numeric(testing_test$Date)
+testing_test$Date <-  as.Date(testing_test$Date - 2, origin = "1900-01-01")
+
+testing_test <- testing_test %>% pivot_wider(names_from = Subcategory,
+                                             values_from = Count)
+colnames(testing_test)[2:5] <- c("Tested_Overall", "Tested_Positive",
+                                 "Deaths_Cuml", "Recovered_Cuml")
+testing_test <- testing_test %>% 
+  mutate(Test_New = Tested_Overall - lag(Tested_Overall, default = 0),
+         Pos_New = Tested_Positive - lag(Tested_Positive, default = 0),
+         Test_Lag_1 = lag(Test_New, n = 1, default = 0),
+         Test_Lag_2 = lag(Test_New, n = 2, default = 0),
+         Test_Lag_3 = lag(Test_New, n = 3, default = 0),
+         Test_Lag_4 = lag(Test_New, n = 4, default = 0),
+         Test_Lag_5 = lag(Test_New, n = 5, default = 0),
+         Test_Lag_6 = lag(Test_New, n = 6, default = 0),
+         Test_Lag_7 = lag(Test_New, n = 7, default = 0))
+```
+
+## New Postive Results in DC Lag by About Four Days
+
+The below plot show the number of Positive Tests in red and the number of New
+Tests times the positive test rate in blue.
+
+```{r same_day}
+plot1 <- testing_test %>% 
+  dplyr::mutate(Test_by_Pos_Rate = Test_New / (max(Tested_Overall)/max(Tested_Positive))) %>% 
+  dplyr::select(Date, Pos_New, Test_by_Pos_Rate) %>% 
+  tidyr::gather(key = "Test_Metric", value = "Number",
+                Pos_New, Test_by_Pos_Rate)
+
+ggplot(data = plot1, aes(x = Date)) +
+  geom_line(aes(y = Number, color = Test_Metric), size = 1) +
+  labs(title = "Positive Tests and Total Tests for Covid-19 in DC", y = "Tests", x = "Date") +
+  scale_color_discrete(name = "Testing Metric by Day",
+                       labels = c("Positve Tests",
+                                  "Total Tests\n(times cumulative\npositive test rate)")) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+## Lagged test results
+
+The below plot shows the number of Positive Tests in red and the number of New
+Tests four days ago times the positive test rate in blue.
+
+```{r lag_4}
+plot2 <- testing_test %>% 
+  dplyr::mutate(Test_Lag_4_by_Pos_Rate = Test_Lag_4 / (max(Tested_Overall)/max(Tested_Positive))) %>% 
+  dplyr::select(Date, Pos_New, Test_Lag_4_by_Pos_Rate) %>% 
+  tidyr::gather(key = "Test_Metric", value = "Number",
+                Pos_New, Test_Lag_4_by_Pos_Rate)
+
+ggplot(data = plot2, aes(x = Date)) +
+  geom_line(aes(y = Number, color = Test_Metric), size = 1) +
+  labs(title = "Positive Tests and Lagged Total Tests for Covid-19 in DC",
+       y = "Tests", x = "Date") +
+  scale_color_discrete(name = "Testing Metric by Day",
+                       labels = c("Positve Tests",
+                                  "Total Tests 4 Days Ago\n(times cumulative\n positive test rate)")) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Here are the correlation matricies for those interested in such a thing.
+
+```{r}
+cor(testing_test[6:ncol(testing_test)])
+```
+
+Note: the test counts for 20 March were missing so I averaged the 19 March and 
+21 March test rate.
