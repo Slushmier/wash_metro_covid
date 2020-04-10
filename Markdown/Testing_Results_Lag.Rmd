@@ -1,9 +1,9 @@
 ---
 title: "Lag in DC Test Results"
 output:
+  rmarkdown::github_document: default
   html_document: 
     keep_md: no
-  rmarkdown::github_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -16,7 +16,7 @@ library(ggplot2)
 
 setwd("..")
 
-overall_dc <- read_excel("Data/DC_Daily/DC-COVID-19-Data-for-April-7-2020.xlsx",
+overall_dc <- read_excel("Data/DC_Daily/DC-COVID-19-Data-forApril-9-2020.xlsx",
                           sheet = "Overal Stats")
 colnames(overall_dc)[1:2] <- c("Category", "Subcategory")
 overall_dc <- overall_dc %>% dplyr::filter(!is.na(Category))
@@ -48,7 +48,9 @@ testing_test <- testing_test %>%
          Test_Lag_7 = lag(Test_New, n = 7, default = 0))
 ```
 
-## Postive Covid-19 Results in DC Lag by About Four Days
+### Postive Covid-19 Results in DC Lag by About Four Days
+
+`r format(Sys.time(), '%d %B, %Y')`
 
 The below plot shows the number of Positive Tests in red and the number of New
 Tests (multiplied by the positive test rate) in blue. Although the numbers 
