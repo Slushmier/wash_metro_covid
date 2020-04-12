@@ -16,7 +16,7 @@ library(ggplot2)
 
 setwd("..")
 
-overall_dc <- read_excel("Data/DC_Daily/DC-COVID-19-Data-forApril-9-2020.xlsx",
+overall_dc <- read_excel("Data/DC_Daily/DC COVID-19 Data for April 11 2020.xlsx",
                           sheet = "Overal Stats")
 colnames(overall_dc)[1:2] <- c("Category", "Subcategory")
 overall_dc <- overall_dc %>% dplyr::filter(!is.na(Category))
