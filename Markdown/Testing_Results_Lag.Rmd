@@ -13,11 +13,14 @@ library(readxl)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(httr)
 
 setwd("..")
 
-overall_dc <- read_excel("Data/DC_Daily/DC-COVID-19-Data-forApril-14-2020.xlsx",
-                          sheet = "Overal Stats")
+sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/coronavirus/page_content/attachments/DC-COVID-19-Data-for-April-21-2020.xlsx"
+GET(sheet_url, write_disk(tf <- tempfile(fileext = ".xlsx")))
+
+overall_dc <- read_excel(tf, sheet = "Overal Stats")
 colnames(overall_dc)[1:2] <- c("Category", "Subcategory")
 overall_dc <- overall_dc %>% dplyr::filter(!is.na(Category))
 
@@ -28,7 +31,6 @@ for(i in 3:ncol(testing)) testing[i] <- as.numeric(testing[[i]])
 
 testing_test <- testing %>% dplyr::select(-Category) %>% 
   pivot_longer(-Subcategory, names_to = "Date", values_to = "Count")
-
 testing_test$Date <- as.numeric(testing_test$Date)
 testing_test$Date <-  as.Date(testing_test$Date - 2, origin = "1900-01-01")
 
@@ -36,6 +38,10 @@ testing_test <- testing_test %>% pivot_wider(names_from = Subcategory,
                                              values_from = Count)
 colnames(testing_test)[2:5] <- c("Tested_Overall", "Tested_Positive",
                                  "Deaths_Cuml", "Recovered_Cuml")
+
+### Fix the missing value for Tested_Overall on 20 March
+testing_test[testing_test$Date == "2020-03-20", 2] <- 814
+
 testing_test <- testing_test %>% 
   mutate(Test_New = Tested_Overall - lag(Tested_Overall, default = 0),
          Pos_New = Tested_Positive - lag(Tested_Positive, default = 0),
@@ -45,7 +51,11 @@ testing_test <- testing_test %>%
          Test_Lag_4 = lag(Test_New, n = 4, default = 0),
          Test_Lag_5 = lag(Test_New, n = 5, default = 0),
          Test_Lag_6 = lag(Test_New, n = 6, default = 0),
-         Test_Lag_7 = lag(Test_New, n = 7, default = 0))
+         Test_Lag_7 = lag(Test_New, n = 7, default = 0),
+         Test_Lag_8 = lag(Test_New, n = 8, default = 0),
+         Test_Lag_9 = lag(Test_New, n = 9, default = 0),
+         Test_Lag_10 = lag(Test_New, n = 10, default = 0)
+         )
 ```
 
 ### Postive Covid-19 Results in DC Lag by About Four Days
@@ -105,3 +115,20 @@ A couple notes. First, the test counts for 20 March were missing so I averaged
 the 19 March and 21 March test rate. In addition, for the initial lagged 
 variables, I made the defaults zero. This could make the correlation metrics
 stronger for the lagged variables, but the effect doesn't look uniform.
+
+### Cumulitave Positive Test Rate
+
+```{r}
+plot3 <- testing_test %>% 
+  dplyr::filter(Date >= "2020-03-13") %>% 
+  mutate(pos_rate_cumulative = Tested_Positive / 
+           Tested_Overall * 100)
+
+gg_rate <- ggplot(data = plot3, aes(x = Date, y = pos_rate_cumulative )) +
+  geom_line() + ylab("Cumulative Positive Test Rate") + 
+  ylim(c(0, max(plot3$pos_rate_cumulative, na.rm = T) + 2)) + 
+  ggtitle("DC Positive Covid-19 Test Rate Over Time") +
+  theme(plot.title = element_text(hjust = 0.5))
+gg_rate
+```
+
