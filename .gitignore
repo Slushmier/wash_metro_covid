@@ -2,4 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+.Rproj
+.xlsx
+.Rmd
+Data/DC_Daily
 Markdown/Testing_Results_Lag.html
