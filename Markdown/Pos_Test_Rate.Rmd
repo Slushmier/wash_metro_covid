@@ -1,0 +1,197 @@
+---
+title: "Positive Covid-19 Test Rate Increases Around DC"
+date: "4/22/2020"
+output:
+  rmarkdown::github_document: default
+  html_document: 
+    keep_md: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(httr)
+
+setwd("..")
+
+sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/coronavirus/page_content/attachments/DC-COVID-19-Data-for-April-21-2020.xlsx"
+GET(sheet_url, write_disk(tf <- tempfile(fileext = ".xlsx")))
+
+overall_dc <- read_excel(tf, sheet = "Overal Stats")
+colnames(overall_dc)[1:2] <- c("Category", "Subcategory")
+overall_dc <- overall_dc %>% dplyr::filter(!is.na(Category))
+
+### Testing data missing from 20 March, so averaging 19 March and 21 March data
+testing <- overall_dc %>% dplyr::filter(Category == "Testing")
+for(i in 3:ncol(testing)) testing[i] <- testing[[i]] %>% replace_na(0)
+for(i in 3:ncol(testing)) testing[i] <- as.numeric(testing[[i]])
+
+testing_test <- testing %>% dplyr::select(-Category) %>% 
+  pivot_longer(-Subcategory, names_to = "Date", values_to = "Count")
+testing_test$Date <- as.numeric(testing_test$Date)
+testing_test$Date <-  as.Date(testing_test$Date - 2, origin = "1900-01-01")
+
+testing_test <- testing_test %>% pivot_wider(names_from = Subcategory,
+                                             values_from = Count)
+colnames(testing_test)[2:5] <- c("Tested_Overall", "Tested_Positive",
+                                 "Deaths_Cuml", "Recovered_Cuml")
+
+### Fix the missing value for Tested_Overall on 20 March
+testing_test[testing_test$Date == "2020-03-20", 2] <- 814
+
+testing_test <- testing_test %>% 
+  mutate(Test_New = Tested_Overall - lag(Tested_Overall, default = 0),
+         Pos_New = Tested_Positive - lag(Tested_Positive, default = 0),
+         Test_Lag_1 = lag(Test_New, n = 1, default = 0),
+         Test_Lag_2 = lag(Test_New, n = 2, default = 0),
+         Test_Lag_3 = lag(Test_New, n = 3, default = 0),
+         Test_Lag_4 = lag(Test_New, n = 4, default = 0),
+         Test_Lag_5 = lag(Test_New, n = 5, default = 0),
+         Test_Lag_6 = lag(Test_New, n = 6, default = 0),
+         Test_Lag_7 = lag(Test_New, n = 7, default = 0),
+         Test_Lag_8 = lag(Test_New, n = 8, default = 0),
+         Test_Lag_9 = lag(Test_New, n = 9, default = 0),
+         Test_Lag_10 = lag(Test_New, n = 10, default = 0)
+         )
+
+covid_tracking <- read_csv("https://covidtracking.com/api/v1/states/daily.csv") %>%
+  dplyr::filter(state %in% c("DC", "MD", "VA", "NY", "NJ")) %>% 
+  dplyr::rename(State = state) %>% 
+  group_by(State) %>% 
+  dplyr::mutate(date = as_date(as.character(date),
+                               format = "%Y%m%d", tz = "UTC")) %>% 
+  dplyr::mutate(pos_rate = positive / (positive + negative) * 100,
+                pos_tests_3day = positiveIncrease + 
+                  lag(positiveIncrease, n = 1L, order_by = date) +
+                  lag(positiveIncrease, n = 2L, order_by = date),
+                total_tests_3day = totalTestResultsIncrease + 
+                  lag(totalTestResultsIncrease, n = 1L, order_by = date)+
+                  lag(totalTestResultsIncrease, n = 2L, order_by = date),
+                pos_rate_3day = pos_tests_3day / 
+                  total_tests_3day * 100,
+                death_in_3 = lead(deathIncrease, n = 3L,
+                                  order_by = date),
+                # Population estimates from Census 2019
+                population = case_when(
+                  State == "DC" ~ 705749,
+                  State == "MD" ~ 6045680,
+                  State == "VA" ~ 8535519,
+                  State == "NY" ~ 19453561,
+                  State == "NJ" ~ 8882190
+                ),
+                deathIncPerMil = deathIncrease/population * 1000000) %>% 
+  dplyr::filter(!(State == "MD" & date < "2020-03-28"))
+
+current_rates <- dplyr::filter(covid_tracking, date == max(date)) %>% 
+  select(pos_rate, pos_rate_3day)
+```
+
+The number of Covid-19 tests conducted in the DC area increased 
+considerably through the first part of April and has generally 
+plateaued since then. However, the positive test rate has increased
+recently, suggesting that the plateauing case numbers may be a result
+of plateauing testing capability.
+
+The graph below shows a rolling three-day average of tests conducted in
+DC, Maryland, and Virginia. Note: Maryland only began reporting negative
+tests in late March, so I've truncated most of the Maryland data until it
+doesn't show abnormal spikes in late March.
+
+```{r dmv_testing_numbers}
+ggplot(data = dplyr::filter(covid_tracking,
+                            State %in% c("DC", "MD", "VA"),
+                            !(State == "MD" & date < "2020-03-31")),
+       aes(x = date, y = total_tests_3day / 3, color = State)) +
+  geom_line(size = 1) + 
+  labs(x = "Date", y = "Covid-19 Tests Conducted\n3 Day Average",
+       title = "Covid-19 Tests Completed Near DC",
+       caption = "Data from Covid Tracking Project")
+```
+
+Despite plateauing or decreasing numbers of tests in the area, the 
+cumulative positive test rate has increased over time since the rates 
+spiked in mid-March, when fewer Covid-19 tests were being conducted.
+Right now, the cumulate positive rate in DC is 
+`r round(current_rates[current_rates$State == "DC", "pos_rate"][[1]], 1)`%, the rate in Maryland is 
+`r round(current_rates[current_rates$State == "MD", "pos_rate"][[1]], 1)`%, and the rate in Virginia is
+`r round(current_rates[current_rates$State == "VA", "pos_rate"][[1]], 1)`%.  
+
+```{r pos_rate_cumulative}
+ggplot(data = dplyr::filter(covid_tracking,
+                            State %in% c("DC", "MD", "VA")),
+       aes(x = date, y = pos_rate, color = State)) +
+  geom_line(size = 1) + 
+  labs(x = "Date", y = "Cumulative Positive Test Rate (%)",
+       title = "Covid-19 Positive Test (Cumulative) Rate Near DC",
+       caption = "Data from Covid Tracking Project")
+```
+
+The recent increases in positive test rates are more pronounced 
+when displayed as recent, rather than cumulative, averages. The average positive test rate between `r Sys.Date()-3` and `r Sys.Date()-1` was 
+`r round(current_rates[current_rates$State == "DC", "pos_rate_3day"][[1]], 1)`% in DC,
+`r round(current_rates[current_rates$State == "MD", "pos_rate_3day"][[1]], 1)`% in Maryland, and `r round(current_rates[current_rates$State == "VA", "pos_rate_3day"][[1]], 1)`% in Virginia.  
+`
+```{r rolling_pos_rate}
+ggplot(data = dplyr::filter(covid_tracking,
+                            State %in% c("DC", "MD", "VA")),
+       aes(x = date, y = pos_rate_3day, color = State)) +
+  geom_line(size = 1) + 
+  labs(x = "Date", y = "Rolling 3 Day Positive Test Rate (%)",
+       title = "Covid-19 Positive Test Rate Near DC",
+       caption = "Data from Covid Tracking Project") +
+  ylim(0, 40) +
+  xlim(min(covid_tracking$date) + 10, max(covid_tracking$date))
+```
+
+New York state has generally had the highest testing rate of any state,
+due to New York City being the center of the Covid-19 pandemic in the 
+United States. However, even with a high number of tests, the positive 
+test rate spiked precipitously as the daily death rate started climbing 
+in the state. The positive test rate peaked more than a week before the 
+daily death rate peaked in the state.
+
+```{r ny_plot}
+ggplot(data = dplyr::filter(covid_tracking,
+                            State %in% c("NY")), aes(x = date)) + 
+  geom_line(aes(y = deathIncPerMil), size = 1, color = "red") +
+  geom_line(aes(y = pos_rate_3day), size = 1, color = "blue") +
+  xlim(min(covid_tracking$date) + 10, max(covid_tracking$date)) +
+  ylim(0, 60) + 
+  labs(title = "Covid-19 Rates in NY State",
+       x = "Date", y = "Rate") +
+  annotate("text", label = "Positive Test Rate - 3 Day Average",
+           x = max(covid_tracking$date) - 20,
+           y = 57, color = "blue") +
+  annotate("text", label = "New Deaths per million", color = "red",
+           x = max(covid_tracking$date) - 14, y = 10)
+```
+
+The DC area clearly hasn't seen a rise like in New York. However, the 
+rising positive test rate and plateauing number of tests that are being
+conducted in DC, Maryland, and Virginia suggests that the area probably
+isn't experiencing a major decline in the number of cases. Also, after
+that statement, it's probably a good time to mention I am not an 
+epidemiologist and probably talk to one or read something by one before 
+taking that previous sentence as gospel.
+
+## Appendix: DC Test Rates
+
+This plot simply shows the cumulative positive test rate using data 
+directly from the DC government.
+
+```{r dc_data}
+plot3 <- testing_test %>% 
+  dplyr::filter(Date >= "2020-03-13") %>% 
+  mutate(pos_rate_cumulative = Tested_Positive / 
+           Tested_Overall * 100)
+
+gg_rate <- ggplot(data = plot3, aes(x = Date, y = pos_rate_cumulative )) +
+  geom_line() + ylab("Cumulative Positive Test Rate") + 
+  ylim(c(0, max(plot3$pos_rate_cumulative, na.rm = T) + 2)) + 
+  ggtitle("DC Positive Covid-19 Test Rate Over Time") +
+  theme(plot.title = element_text(hjust = 0.5))
+gg_rate
+```
