@@ -1,6 +1,6 @@
 Positive Covid-19 Test Rate Increases Around DC
 ================
-4/21/2020
+4/22/2020
 
 The number of Covid-19 tests conducted in the DC area increased
 considerably through the first part of April and has generally plateaued
@@ -19,14 +19,14 @@ Despite plateauing or decreasing numbers of tests in the area, the
 cumulative positive test rate has increased over time since the rates
 spiked in mid-March, when fewer Covid-19 tests were being conducted.
 Right now, the cumulate positive rate in DC is 20.7%, the rate in
-Maryland is 19.2%, and the rate in Virginia is 15.8%.
+Maryland is 19.3%, and the rate in Virginia is 16.2%.
 
 ![](Pos_Test_Rate_files/figure-gfm/pos_rate_cumulative-1.png)<!-- -->
 
 The recent increases in positive test rates are more pronounced when
 displayed as recent, rather than cumulative, averages. The average
-positive test rate between 2020-04-18 and 2020-04-20 was 30.7% in DC,
-22.5% in Maryland, and 19.4% in Virginia.  
+positive test rate between 2020-04-19 and 2020-04-21 was 25.9% in DC,
+22.8% in Maryland, and 21.8% in Virginia.  
 \` ![](Pos_Test_Rate_files/figure-gfm/rolling_pos_rate-1.png)<!-- -->
 
 New York state has generally had the highest testing rate of any state,
