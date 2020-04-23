@@ -17,7 +17,8 @@ library(httr)
 
 setwd("..")
 
-sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/coronavirus/page_content/attachments/DC-COVID-19-Data-for-April-21-2020.xlsx"
+sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/doc/page_content/attachments/DC-COVID-19-Data-for-April-22-2020.xlsx"
+
 GET(sheet_url, write_disk(tf <- tempfile(fileext = ".xlsx")))
 
 overall_dc <- read_excel(tf, sheet = "Overal Stats")
@@ -61,6 +62,10 @@ testing_test <- testing_test %>%
 ### Postive Covid-19 Results in DC Lag by About Four Days
 
 `r format(Sys.time(), '%d %B, %Y')`
+
+**Note: I'm going to stop updating this file as the clear relationship
+between tests a few days ago and positive numbers now doesn't appear to
+be valid anymore.**
 
 The below plot shows the number of Positive Tests in red and the number of New
 Tests (multiplied by the positive test rate) in blue. Although the numbers 
