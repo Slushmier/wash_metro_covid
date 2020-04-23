@@ -8,13 +8,15 @@ library(leaftime)
 library(metricsgraphics)
 
 ### Read in the data of interest
-dmv_covid_ts <- st_read("Data\\dmv_covid_spatial_timeseries.geojson")
-dmv_newest <- st_read("Data\\dmv_covid_newest_spatial.geojson") %>% 
+dmv_covid_ts <- st_read("https://raw.githubusercontent.com/Slushmier/wash_metro_covid/master/Data/dmv_covid_spatial_timeseries.geojson")
+dmv_newest <- st_read("https://raw.githubusercontent.com/Slushmier/wash_metro_covid/master/Data/dmv_covid_newest_spatial.geojson") %>% 
   mutate_if(is.factor, ~ as.character(.x)) %>% 
   mutate(AWATERK = as.numeric(AWATERK),
          CENSUS2 = as.numeric(CENSUS2),
          Confirmed = as.numeric(Confirmed))
-dmv_newest <- dmv_newest %>% mutate(rate1000 = Confirmed / POPESTI * 1000)
+dmv_newest <- dmv_newest %>% 
+  mutate(rate1000 = Confirmed / POPESTI * 1000,
+         death1000 = Deaths / POPESTI * 1000)
 
 ### Get the unique counties list within the data 
 counties_list <- dmv_newest %>% arrange(STNAME) %>%
@@ -38,23 +40,25 @@ counties <- rbind(c("Washington Metro Area"), counties['NAMELSA'])
 ### Formatting for the popup information when you click on a county
 ### in the Leaflet map
 county_popup <- paste0("<strong>Covid-19 Data by County</strong>",
-                         "<br><br><strong>County: </strong>", 
-                         dmv_newest$NAMELSA, 
-                         "<br><strong>State: </strong>",
-                         dmv_newest$STNAME,
-                         "<br><strong>Date of Data: </strong>", 
-                         dmv_newest$date,
-                         "<br><strong>Cumulative confirmed cases (JHU): </strong>",
-                         dmv_newest$Confirmed,
-                        "<br><strong>Cumulative deaths (JHU): </strong>",
-                         dmv_newest$Deaths,
-                         "<br><strong>Confirmed Cases per 1 thousand people: </strong>",
-                         round(dmv_newest$rate1000, 5),
-                         "<br><strong>Population Estimate (Census 2018): </strong>",
-                         dmv_newest$POPESTI,
-                         "<br><strong>Population Density (per sq km): </strong>",
-                         round(dmv_newest$pop_density, 5)
-                          )
+                       "<br><br><strong>County: </strong>", 
+                       dmv_newest$NAMELSA, 
+                       "<br><strong>State: </strong>",
+                       dmv_newest$STNAME,
+                       "<br><strong>Date of Data: </strong>", 
+                       dmv_newest$date,
+                       "<br><strong>Cumulative confirmed cases (JHU): </strong>",
+                       dmv_newest$Confirmed,
+                       "<br><strong>Cumulative deaths (JHU): </strong>",
+                       dmv_newest$Deaths,
+                       "<br><strong>Confirmed cases per 1 thousand people: </strong>",
+                       round(dmv_newest$rate1000, 5),
+                       "<br><strong>Confirmed deaths per 1 thousand people: </strong>",
+                       round(dmv_newest$death1000, 5),
+                       "<br><strong>Population Estimate (Census 2018): </strong>",
+                       dmv_newest$POPESTI,
+                       "<br><strong>Population Density (per sq km): </strong>",
+                       round(dmv_newest$pop_density, 5)
+                       )
 
 ui <- fluidPage(
   title = "Covid-19 Cases in Washington Metro Area",
@@ -64,43 +68,51 @@ ui <- fluidPage(
   fluidRow(
     column(width = 6, leafletOutput("dmvmap")),
     column(width = 6,
-      tabsetPanel(type = "tabs",
-                  tabPanel("Cases Over Time", metricsgraphicsOutput('plot')),
-                  tabPanel("County Case Data", tableOutput("table"),
-                           style = "height: 400px; overflow-y: scroll;"
-      )
-      )
-      )
-    ),
+           tabsetPanel(type = "tabs",
+                       tabPanel("Cases Over Time", metricsgraphicsOutput('plot')),
+                       tabPanel("County Case Data", tableOutput("table"),
+                                style = "height: 400px; overflow-y: scroll;"
+                       )
+           )
+    )
+  ),
   
   ### Alignment for the bottom row of the web page
   fluidRow(
-    column(width = 3, p("Case data comes from",
-                        tags$a(href = "https://github.com/CSSEGISandData/COVID-19",
-                               "the Johns Hopkins University COVID-19 Github page."),
-                        " Case numbers are certainly lower than actual case numbers.")),
-    column(width = 3, 
-           p(tags$a(href = "https://github.com/Slushmier/wash_metro_covid",
-                     "Here is the GitHub repository for this page."))
-           ),
     column(width = 6,
-      fluidRow(align = "center",
-           tags$head(tags$style(type = "text/css", paste0(".selectize-dropdown {
+           fluidRow(align = "center",
+                    checkboxInput("deathMap", "Map Deaths", value = FALSE)),
+           fluidRow(
+             column(width = 6, p("Case data comes from",
+                                 tags$a(href = "https://github.com/CSSEGISandData/COVID-19",
+                                        "the Johns Hopkins University COVID-19 Github page."),
+                                 " Case numbers are certainly lower than actual case numbers.")),
+             column(width = 6, 
+                    p(tags$a(href = "https://github.com/Slushmier/wash_metro_covid",
+                             "Here is the GitHub repository for this page."))
+             ) 
+           )
+           
+    ),
+    column(width = 6,
+           fluidRow(align = "center",
+                    column(width = 6, checkboxInput("newCases", "Graph New Cases", value = FALSE)),
+                    column(width = 6, checkboxInput("log", "Log Scale", value = FALSE))
+           ),
+           fluidRow(align = "center",
+                    tags$head(tags$style(type = "text/css", paste0(".selectize-dropdown {
                                                      bottom: 100% !important;
                                                      top:auto!important;
                                                  }}"))),
-           selectInput("countyinput",
-                       label = "County for Projections:",
-                       selected = "District of Columbia",
-                       choices = counties$NAMELSA)
-           ),
-           fluidRow(align = "center",
-             column(width = 6, checkboxInput("newCases", "Graph New Cases", value = FALSE)),
-             column(width = 6, checkboxInput("log", "Log Scale", value = FALSE))
-           ))
+                    selectInput("countyinput",
+                                label = "County for Projections:",
+                                selected = "District of Columbia",
+                                choices = counties$NAMELSA)
+           )
     )
   )
-  
+)
+
 server <- function(input, output, session){
   
   ### Render the data subset for the table in the second tab of the 
@@ -133,25 +145,49 @@ server <- function(input, output, session){
   
   ### Create the leaflet plot in the upper left
   output$dmvmap <- renderLeaflet({
-    pal_map <- colorQuantile("Reds",
-                             domain = dmv_newest$rate1000,
-                             n = 4)
+    if(input$deathMap){
+      pal_map <- colorNumeric("Reds", domain = dmv_newest$death1000, n = 4)
+    } else {
+      pal_map <- colorQuantile("Reds", domain = dmv_newest$rate1000, n = 4)
+    }
     
-    leaflet(dmv_newest, sizingPolicy = leafletSizingPolicy(defaultHeight = "100%")) %>% 
-      addTiles() %>% 
-      setView(lat = 38.875,lng = -77.4, zoom = 8) %>% 
-      addPolygons(layerId = ~NAMELSA, color = "gray", weight = 1.25, smoothFactor = 0.5,
-                  opacity = 0.5, fillOpacity = 0.3, 
-                  fillColor = ~colorQuantile("Reds", rate1000, n = 4)
-                  (rate1000),
+  mapvar <- leaflet(dmv_newest,
+              sizingPolicy = leafletSizingPolicy(defaultHeight = "100%")) %>% 
+      addProviderTiles(providers$CartoDB.Positron) %>% 
+      setView(lat = 38.875,lng = -77.8, zoom = 8) %>% 
+      addFullscreenControl()
+
+  if(input$deathMap){
+    mapvar %>% 
+      addPolygons(layerId = ~NAMELSA, color = "gray", weight = 1.25,
+                  smoothFactor = 0.5, opacity = 0.5, fillOpacity = 0.3, 
+                  fillColor = ~colorNumeric("Reds", death1000)(death1000),
                   highlightOptions = highlightOptions(color = "red",
                                                       weight = 3,
                                                       bringToFront = T),
                   popup = county_popup,
-                  label = ~paste0(NAMELSA, ": ", Confirmed, " confirmed cases."),
+                  label = ~paste0(NAMELSA, ": ",
+                                  Deaths, " confirmed deaths."),
                   labelOptions = labelOptions(direction = "auto")) %>% 
-      addLegend("topright", pal = pal_map, values = ~rate1000,
-                title = "Confirmed Cases Per <br>1,000 People",
+      addLegend("bottomleft", pal = pal_map, values = ~death1000,
+                title = "Confirmed Covid-19 Deaths<br>Per 1,000 People",
+                opacity = 0.5)
+  }
+  else {
+    mapvar %>%  
+      addPolygons(layerId = ~NAMELSA, color = "gray", weight = 1.25,
+                  smoothFactor = 0.5, opacity = 0.5, fillOpacity = 0.3, 
+                  fillColor = ~colorQuantile("Reds", rate1000,
+                                             n = 4)(rate1000),
+                  highlightOptions = highlightOptions(color = "red",
+                                                      weight = 3,
+                                                      bringToFront = T),
+                  popup = county_popup,
+                  label = ~paste0(NAMELSA, ": ",
+                                  Confirmed, " confirmed cases."),
+                  labelOptions = labelOptions(direction = "auto")) %>% 
+      addLegend("bottomleft", pal = pal_map, values = ~rate1000,
+                title = "Confirmed Covid-19 Cases<br>Per 1,000 People",
                 opacity = 0.5,
                 labFormat = function(type, cuts, p) {
                   n = length(cuts)
@@ -162,8 +198,9 @@ server <- function(input, output, session){
                     '<span title="', p[-n], " - ", p[-1], '">', cuts,
                     '</span>')
                 }
-      ) %>%
-      addFullscreenControl()
+                
+      )
+  }
   })
   
   ### Creates an MJS plot of cases/deaths over time in top right
