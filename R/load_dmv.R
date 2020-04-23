@@ -5,25 +5,7 @@
 library(tidyverse)
 library(sf)
 
-dmv_data <- st_read("https://github.com/Slushmier/covid_us_tidy_time_series/raw/master/Data/counties_all.geojson") %>% 
-  dplyr::filter(STNAME == "Virginia" | STNAME == "Maryland" | 
-                  STNAME == "West Virginia" | STNAME == "District of Columbia") %>% 
-  dplyr::filter(NAMELSA %in% 
-                  c("District of Columbia", "Calvert County", "Charles County",
-                    "Frederick County", "Prince George's County",
-                    "Jefferson County", "Montgomery County", "Alexandria city",
-                    "Arlington County",
-                    "Clarke County", "Culpeper County", "Fairfax County", 
-                    "Fairfax city", "Falls Church city", "Fauquier County",
-                    "Fredericksburg city", "Loudoun County", "Manassas city",
-                    "Manassas Park city", "Prince William County", 
-                    "Rappahannock County", "Spotsylvania County", 
-                    "Stafford County", "Warren County")) %>% 
-  dplyr::filter(!(STNAME == "Virginia" & NAMELSA %in%
-                  c("Montgomery County", "Frederick County"))) %>% 
-  dplyr::select(-date, -Province_State, -Country_Region, -Confirmed, -Deaths, 
-                -Recovered, -Active, -Combined_Key) %>% 
-  dplyr::mutate(GEOID = as.numeric(as.character(GEOID)))
+dmv_data <- st_read("https://raw.githubusercontent.com/Slushmier/wash_metro_covid/master/Data/dmv_county_boundaries.geojson")
 
 confirmed_timeseries <- st_read("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv") %>% 
   mutate(FIPS = as.numeric(as.character(FIPS)))
