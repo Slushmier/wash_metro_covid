@@ -1,6 +1,5 @@
 ---
 title: "Positive Covid-19 Test Rate Increases Around DC"
-date: "4/22/2020"
 output:
   rmarkdown::github_document: default
   html_document: 
@@ -17,7 +16,8 @@ library(httr)
 
 setwd("..")
 
-sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/coronavirus/page_content/attachments/DC-COVID-19-Data-for-April-21-2020.xlsx"
+sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/doc/page_content/attachments/DC-COVID-19-Data-for-April-22-2020.xlsx"
+
 GET(sheet_url, write_disk(tf <- tempfile(fileext = ".xlsx")))
 
 overall_dc <- read_excel(tf, sheet = "Overal Stats")
@@ -58,7 +58,8 @@ testing_test <- testing_test %>%
          )
 
 covid_tracking <- read_csv("https://covidtracking.com/api/v1/states/daily.csv") %>%
-  dplyr::filter(state %in% c("DC", "MD", "VA", "NY", "NJ")) %>% 
+  dplyr::filter(state %in% c("DC", "MD", "VA", "NY",
+                             "NJ", "MI", "LA")) %>% 
   dplyr::rename(State = state) %>% 
   group_by(State) %>% 
   dplyr::mutate(date = as_date(as.character(date),
@@ -77,6 +78,8 @@ covid_tracking <- read_csv("https://covidtracking.com/api/v1/states/daily.csv") 
                 # Population estimates from Census 2019
                 population = case_when(
                   State == "DC" ~ 705749,
+                  State == "LA" ~ 4648790,
+                  State == "MI" ~ 9986860,
                   State == "MD" ~ 6045680,
                   State == "VA" ~ 8535519,
                   State == "NY" ~ 19453561,
@@ -88,6 +91,8 @@ covid_tracking <- read_csv("https://covidtracking.com/api/v1/states/daily.csv") 
 current_rates <- dplyr::filter(covid_tracking, date == max(date)) %>% 
   select(pos_rate, pos_rate_3day)
 ```
+
+`r Sys.time()`
 
 The number of Covid-19 tests conducted in the DC area increased 
 considerably through the first part of April and has generally 
@@ -161,7 +166,8 @@ ggplot(data = dplyr::filter(covid_tracking,
   xlim(min(covid_tracking$date) + 10, max(covid_tracking$date)) +
   ylim(0, 60) + 
   labs(title = "Covid-19 Rates in NY State",
-       x = "Date", y = "Rate") +
+       x = "Date", y = "Rate",
+       caption = "Data from Covid Track Project") +
   annotate("text", label = "Positive Test Rate - 3 Day Average",
            x = max(covid_tracking$date) - 20,
            y = 57, color = "blue") +
