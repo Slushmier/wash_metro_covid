@@ -167,12 +167,12 @@ ggplot(data = dplyr::filter(covid_tracking,
   ylim(0, 60) + 
   labs(title = "Covid-19 Rates in NY State",
        x = "Date", y = "Rate",
-       caption = "Data from Covid Track Project") +
+       caption = "Data from Covid Tracking Project") +
   annotate("text", label = "Positive Test Rate - 3 Day Average",
-           x = max(covid_tracking$date) - 20,
+           x = max(covid_tracking$date) - 23,
            y = 57, color = "blue") +
   annotate("text", label = "New Deaths per million", color = "red",
-           x = max(covid_tracking$date) - 14, y = 10)
+           x = max(covid_tracking$date) - 18, y = 10)
 ```
 
 The DC area clearly hasn't seen a rise like in New York. However, the 
