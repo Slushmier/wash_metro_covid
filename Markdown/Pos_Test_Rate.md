@@ -1,7 +1,7 @@
 Positive Covid-19 Test Rate Increases Around DC
 ================
 
-2020-04-23 20:17:50
+2020-04-24 14:05:27
 
 The number of Covid-19 tests conducted in the DC area increased
 considerably through the first part of April and has generally plateaued
@@ -26,7 +26,7 @@ Maryland is 19.6%, and the rate in Virginia is 16.5%.
 
 The recent increases in positive test rates are more pronounced when
 displayed as recent, rather than cumulative, averages. The average
-positive test rate between 2020-04-20 and 2020-04-22 was 23.9% in DC,
+positive test rate between 2020-04-21 and 2020-04-23 was 23.9% in DC,
 23.6% in Maryland, and 21% in Virginia.  
 \` ![](Pos_Test_Rate_files/figure-gfm/rolling_pos_rate-1.png)<!-- -->
 
