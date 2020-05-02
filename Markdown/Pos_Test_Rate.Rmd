@@ -16,7 +16,7 @@ library(httr)
 
 setwd("..")
 
-sheet_url <- "https://coronavirus.dc.gov/sites/default/files/u63232/DC%20COVID-19%20Data%20for%20April%2030%202020.xlsx"
+sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/coronavirus/page_content/attachments/DC-COVID-19-Data-for-May-1-2020-2.xlsx"
 
 GET(sheet_url, write_disk(tf <- tempfile(fileext = ".xlsx")))
 
