@@ -16,7 +16,7 @@ library(httr)
 
 setwd("..")
 
-sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/coronavirus/page_content/attachments/DC-COVID-19-Data-for-May-3-2020.xlsx"
+sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/coronavirus/page_content/attachments/DC-COVID-19-Data-for-May-4-2020.xlsx"
 
 GET(sheet_url, write_disk(tf <- tempfile(fileext = ".xlsx")))
 
@@ -169,10 +169,10 @@ ggplot(data = dplyr::filter(covid_tracking,
        x = "Date", y = "Rate",
        caption = "Data from Covid Tracking Project") +
   annotate("text", label = "Positive Test Rate - 3 Day Average",
-           x = max(covid_tracking$date) - 23,
+           x = max(covid_tracking$date) - 30,
            y = 57, color = "blue") +
   annotate("text", label = "New Deaths per million", color = "red",
-           x = max(covid_tracking$date) - 18, y = 10)
+           x = max(covid_tracking$date) - 25, y = 10)
 ```
 
 The DC area clearly hasn't seen a rise like in New York. However, the 
