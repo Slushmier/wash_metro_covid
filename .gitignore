@@ -6,7 +6,6 @@
 .xlsx
 .Rmd
 Data/DC_Daily
-Markdown/Testing_Results_Lag.html
 account.R
 deployApp.R
 rsconnect
