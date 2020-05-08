@@ -1,7 +1,7 @@
 Positive Covid-19 Test Rate Increases Around DC
 ================
 
-2020-05-05 10:26:06
+2020-05-08 10:46:55
 
 The number of Covid-19 tests conducted in the DC area increased
 considerably through the first part of April and has generally plateaued
@@ -19,15 +19,15 @@ it doesn’t show abnormal spikes in late March.
 Despite plateauing or decreasing numbers of tests in the area, the
 cumulative positive test rate has increased over time since the rates
 spiked in mid-March, when fewer Covid-19 tests were being conducted.
-Right now, the cumulate positive rate in DC is 21.7%, the rate in
-Maryland is 19.3%, and the rate in Virginia is 17.4%.
+Right now, the cumulate positive rate in DC is 21.9%, the rate in
+Maryland is 19.8%, and the rate in Virginia is 17.5%.
 
 ![](Pos_Test_Rate_files/figure-gfm/pos_rate_cumulative-1.png)<!-- -->
 
 The recent increases in positive test rates are more pronounced when
 displayed as recent, rather than cumulative, averages. The average
-positive test rate between 2020-05-02 and 2020-05-04 was 19.2% in DC,
-18.3% in Maryland, and 39% in Virginia.  
+positive test rate between 2020-05-05 and 2020-05-07 was 23.5% in DC,
+25.6% in Maryland, and 19.1% in Virginia.  
 \` ![](Pos_Test_Rate_files/figure-gfm/rolling_pos_rate-1.png)<!-- -->
 
 New York state has generally had the highest testing rate of any state,
@@ -46,6 +46,20 @@ isn’t experiencing a major decline in the number of cases. Also, after
 that statement, it’s probably a good time to mention I am not an
 epidemiologist and probably talk to one or read something by one before
 taking that previous sentence as gospel.
+
+I’m currently experimenting with the following plots:
+
+![](Pos_Test_Rate_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+
+![](Pos_Test_Rate_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+![](Pos_Test_Rate_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+![](Pos_Test_Rate_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+![](Pos_Test_Rate_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+![](Pos_Test_Rate_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ## Appendix: DC Test Rates
 
