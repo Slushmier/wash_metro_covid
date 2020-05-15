@@ -15,7 +15,7 @@ library(readxl)
 library(httr)
 
 ### DC Data Excel
-sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/coronavirus/page_content/attachments/DC-COVID-19-Data-for-May-12-2020-updated.xlsx"
+sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/coronavirus/page_content/attachments/DC-COVID-19-Data-for-May-14-2020-updated.xlsx"
 GET(sheet_url, write_disk(tf <- tempfile(fileext = ".xlsx")))
 
 ### Moving Average Function
@@ -198,6 +198,40 @@ epidemiologist and probably talk to one or read something by one before
 taking that previous sentence as gospel.
 
 I'm currently experimenting with the following plots:
+
+```{r}
+ggplot(data = dplyr::filter(covid_tracking,
+                            State %in% c("DC","MD", "VA", "WV"),
+                            date > "2020-03-01"), aes(x = date)) + 
+  geom_line(aes(y = deathIncPerMil7DayAvg), size = 1, color = "red") +
+  geom_line(aes(y = pos_rate_7day), size = 1, color = "blue") +
+  xlim(min(covid_tracking$date) + 50, max(covid_tracking$date)) +
+  ylim(0, 60) + 
+  labs(title = "Covid-19 Rates Near DC",
+       x = "Date", y = "Rate",
+       caption = "Data from Covid Tracking Project") +
+  facet_wrap(~State) + scale_y_continuous(trans = "pseudo_log",
+                                          limits = c(0, 100),
+                                          breaks = c(1, 2, 5, 10,
+                                                     20, 50, 100))
+```
+
+```{r}
+ggplot(data = dplyr::filter(covid_tracking,
+                            State %in% c("CO","IL", "MO", "WI"),
+                            date > "2020-03-01"), aes(x = date)) + 
+  geom_line(aes(y = deathIncPerMil7DayAvg), size = 1, color = "red") +
+  geom_line(aes(y = pos_rate_7day), size = 1, color = "blue") +
+  xlim(min(covid_tracking$date) + 50, max(covid_tracking$date)) +
+  ylim(0, 60) + 
+  labs(title = "Covid-19 Rates in Four Other Random States I Care About",
+       x = "Date", y = "Rate",
+       caption = "Data from Covid Tracking Project") +
+  facet_wrap(~State) + scale_y_continuous(trans = "pseudo_log",
+                                          limits = c(0, 100),
+                                          breaks = c(1, 2, 5, 10,
+                                                     20, 50, 100))
+```
 
 ```{r}
 ggplot(data = dplyr::filter(covid_tracking,
