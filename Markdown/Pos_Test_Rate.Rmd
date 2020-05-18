@@ -15,7 +15,7 @@ library(readxl)
 library(httr)
 
 ### DC Data Excel
-sheet_url <- "https://coronavirus.dc.gov/sites/default/files/dc/sites/coronavirus/page_content/attachments/DC-COVID-19-Data-for-May-16-2020.xlsx"
+sheet_url <- "https://coronavirus.dc.gov/sites/default/files/u63232/DC%20COVID-19%20Data%20for%20May%2017%202020.xlsx"
 GET(sheet_url, write_disk(tf <- tempfile(fileext = ".xlsx")))
 
 ### Moving Average Function
@@ -75,7 +75,7 @@ covid_tracking <- read_csv("https://covidtracking.com/api/v1/states/daily.csv") 
   dplyr::filter(!(State == "MD" & date < "2020-03-28"))
 
 current_rates <- dplyr::filter(covid_tracking, date == max(date)) %>% 
-  select(pos_rate, pos_rate_3day)
+  select(pos_rate, pos_rate_3day, pos_rate_7day)
 
 peak_rates <- dplyr::filter(covid_tracking, date >= "2020-04-01") %>% 
   select(State, pos_rate_7day, date) %>% 
@@ -95,11 +95,9 @@ peaks <- left_join(peak_rates, peak_deaths) %>%
 
 `r Sys.time()`
 
-The number of Covid-19 tests conducted in the DC area increased 
-considerably through the first part of April and has generally 
-plateaued since then. However, the positive test rate has increased
-recently, suggesting that the plateauing case numbers may be a result
-of plateauing testing capability.
+The number of Covid-19 tests conducted in the DC area has increased 
+through April and May. The positive test rate has declined more slowly in some
+areas.
 
 The graph below shows a rolling three-day average of tests conducted in
 DC, Maryland, and Virginia. Note: Maryland only began reporting negative
@@ -118,9 +116,6 @@ ggplot(data = dplyr::filter(covid_tracking,
   xlim(min(covid_tracking$date) + 69, max(covid_tracking$date))
 ```
 
-Despite plateauing or decreasing numbers of tests in the area, the 
-cumulative positive test rate has increased over time since the rates 
-spiked in mid-March, when fewer Covid-19 tests were being conducted.
 Right now, the cumulate positive rate in DC is 
 `r round(current_rates[current_rates$State == "DC", "pos_rate"][[1]], 1)`%, the rate in Maryland is 
 `r round(current_rates[current_rates$State == "MD", "pos_rate"][[1]], 1)`%, and the rate in Virginia is
@@ -139,10 +134,10 @@ ggplot(data = dplyr::filter(covid_tracking,
   ylim(0, 25)
 ```
 
-The recent increases in positive test rates are more pronounced 
-when displayed as recent, rather than cumulative, averages. The average positive test rate between `r Sys.Date()-3` and `r Sys.Date()-1` was 
-`r round(current_rates[current_rates$State == "DC", "pos_rate_3day"][[1]], 1)`% in DC,
-`r round(current_rates[current_rates$State == "MD", "pos_rate_3day"][[1]], 1)`% in Maryland, and `r round(current_rates[current_rates$State == "VA", "pos_rate_3day"][[1]], 1)`% in Virginia.  
+The more recent positive test rates show recent declines in the rate in DC and
+VA. The average positive test rate between `r Sys.Date()-7` and `r Sys.Date()-1` was 
+`r round(current_rates[current_rates$State == "DC", "pos_rate_7day"][[1]], 1)`% in DC,
+`r round(current_rates[current_rates$State == "MD", "pos_rate_7day"][[1]], 1)`% in Maryland, and `r round(current_rates[current_rates$State == "VA", "pos_rate_7day"][[1]], 1)`% in Virginia.  
 `
 ```{r rolling_pos_rate}
 ggplot(data = dplyr::filter(covid_tracking,
@@ -179,41 +174,44 @@ ggplot(data = dplyr::filter(covid_tracking,
        x = "Date", y = "Rate",
        caption = "Data from Covid Tracking Project") +
   annotate("text", label = "Positive Test Rate - 7 Day Average",
-           x = min(covid_tracking$date) + 73,
+           x = min(covid_tracking$date) + 75,
            y = 53, color = "blue") +
   annotate("text", label = "New Deaths per million - 7 Day Average",
-           color = "red", x = min(covid_tracking$date) + 85, y = 10) 
+           color = "red", x = min(covid_tracking$date) + 88, y = 10) 
   # geom_vline(data = filter(peaks, State == 'NY'),
   #            aes(xintercept = peak_rate)) +
   # geom_vline(data = filter(peaks, State == 'NY'),
   #            aes(xintercept = peak_death))
 ```
 
-The DC area clearly hasn't seen a rise like in New York. However, the 
-rising positive test rate and plateauing number of tests that are being
-conducted in DC, Maryland, and Virginia suggests that the area probably
-isn't experiencing a major decline in the number of cases. Also, after
-that statement, it's probably a good time to mention I am not an 
-epidemiologist and probably talk to one or read something by one before 
-taking that previous sentence as gospel.
+The DC area clearly hasn't seen a rise like in New York. It's unclear how 
+correlated the postitive rate and death rate has been in the area.
 
-I'm currently experimenting with the following plots:
+I'm currently experimenting with the following plots and just posting them for
+me to look at:
 
 ```{r}
+colors <- c("Death Rate" = "red", "Positive Rate" = "blue")
+
 ggplot(data = dplyr::filter(covid_tracking,
                             State %in% c("DC","MD", "VA", "WV"),
                             date > "2020-03-01"), aes(x = date)) + 
-  geom_line(aes(y = deathIncPerMil7DayAvg), size = 1, color = "red") +
-  geom_line(aes(y = pos_rate_7day), size = 1, color = "blue") +
+  scale_y_continuous(trans = "pseudo_log", limits = c(0, 75),
+                     breaks = c(1, 2, 5, 10, 20, 50))  +
+  geom_line(aes(y = deathIncPerMil7DayAvg, color = "red"),
+            size = 1) +
+  geom_line(aes(y = pos_rate_7day, color = "blue"),
+            size = 1) +
   xlim(min(covid_tracking$date) + 50, max(covid_tracking$date)) +
-  ylim(0, 60) + 
-  labs(title = "Covid-19 Rates Near DC",
+  facet_wrap(~State) + 
+    labs(title = "Covid-19 Rates Near DC",
        x = "Date", y = "Rate",
        caption = "Data from Covid Tracking Project") +
-  facet_wrap(~State) + scale_y_continuous(trans = "pseudo_log",
-                                          limits = c(0, 100),
-                                          breaks = c(1, 2, 5, 10,
-                                                     20, 50, 100))
+  scale_color_identity(name = "Rates\n(7 day avg.)", breaks = c("red", "blue"),
+                       labels = c("Death rate\nper million",
+                                  "Positive\ntest rate"), guide = "legend")
+  
+
 ```
 
 ```{r}
@@ -230,7 +228,7 @@ ggplot(data = dplyr::filter(covid_tracking,
   facet_wrap(~State) + scale_y_continuous(trans = "pseudo_log",
                                           limits = c(0, 100),
                                           breaks = c(1, 2, 5, 10,
-                                                     20, 50, 100))
+                                                     20, 50, 100)) 
 ```
 
 ```{r}
