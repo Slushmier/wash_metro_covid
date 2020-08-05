@@ -2,6 +2,9 @@
 ### Statistical Area as defined by the US Census. The data is filtered
 ### and exported as two geoJSON files.
 
+# Setting this to allow task scheduling
+setwd("C://Users/Slushmier/Documents/GitHub/wash_metro_covid")
+
 library(tidyverse)
 library(sf)
 

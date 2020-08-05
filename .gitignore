@@ -9,3 +9,4 @@ Data/DC_Daily
 account.R
 deployApp.R
 rsconnect
+push_git.R
