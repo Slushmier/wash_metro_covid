@@ -6,6 +6,7 @@ library(leaflet)
 library(leaflet.extras)
 library(leaftime)
 library(metricsgraphics)
+library(zoo)
 
 ### Read in the data of interest
 dmv_covid_ts <- st_read("https://raw.githubusercontent.com/Slushmier/wash_metro_covid/master/Data/dmv_covid_spatial_timeseries.geojson")
@@ -96,8 +97,10 @@ ui <- fluidPage(
     ),
     column(width = 6,
            fluidRow(align = "center",
-                    column(width = 6, checkboxInput("newCases", "Graph New Cases", value = FALSE)),
-                    column(width = 6, checkboxInput("log", "Log Scale", value = FALSE))
+                    column(width = 4, checkboxInput("newCases", "Graph New Cases", value = TRUE)),
+                    column(width = 4, checkboxInput("avg7",
+                                                    "7-day average (new cases)", value = TRUE)),
+                    column(width = 4, checkboxInput("log", "Log Scale", value = FALSE))
            ),
            fluidRow(align = "center",
                     tags$head(tags$style(type = "text/css", paste0(".selectize-dropdown {
@@ -217,6 +220,10 @@ server <- function(input, output, session){
     filtered <- dplyr::filter(dmv_covid_ts,
                               NAMELSA == input$countyinput)
     }
+    
+    if(input$avg7 == TRUE & input$newCases == TRUE){filtered <- filtered %>% 
+      mutate_at(c("Confirmed", "Deaths", "New_Confirmed", "New_Deaths"),
+                ~zoo::rollmean(., k = 7, fill = NA))}
     
     ### Get parameters to inform the date range of the below mjs plot
     firstdate <- dplyr::filter(filtered, Confirmed < 1 & Deaths < 1)
