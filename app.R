@@ -9,8 +9,8 @@ library(metricsgraphics)
 library(zoo)
 
 ### Read in the data of interest
-dmv_covid_ts <- st_read("https://raw.githubusercontent.com/Slushmier/wash_metro_covid/master/Data/dmv_covid_spatial_timeseries.geojson")
-dmv_newest <- st_read("https://raw.githubusercontent.com/Slushmier/wash_metro_covid/master/Data/dmv_covid_newest_spatial.geojson") %>% 
+dmv_covid_ts <- st_read("https://raw.githubusercontent.com/Slushmier/wash_metro_covid/main/Data/dmv_covid_spatial_timeseries.geojson")
+dmv_newest <- st_read("https://raw.githubusercontent.com/Slushmier/wash_metro_covid/main/Data/dmv_covid_newest_spatial.geojson") %>% 
   mutate_if(is.factor, ~ as.character(.x)) %>% 
   mutate(AWATERK = as.numeric(AWATERK),
          CENSUS2 = as.numeric(CENSUS2),

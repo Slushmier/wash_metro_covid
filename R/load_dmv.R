@@ -8,7 +8,7 @@ setwd("C://Users/Slushmier/Documents/GitHub/wash_metro_covid")
 library(tidyverse)
 library(sf)
 
-dmv_data <- st_read("https://raw.githubusercontent.com/Slushmier/wash_metro_covid/master/Data/dmv_county_boundaries.geojson")
+dmv_data <- st_read("https://raw.githubusercontent.com/Slushmier/wash_metro_covid/main/Data/dmv_county_boundaries.geojson")
 
 confirmed_timeseries <- st_read("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv") %>% 
   mutate(FIPS = as.numeric(as.character(FIPS)))
